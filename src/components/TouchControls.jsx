@@ -1,10 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 const TouchControls = ({ onControl }) => {
   const [gestureStart, setGestureStart] = useState(null);
+  const [lastActionTime, setLastActionTime] = useState(0);
+  
+  // Constants for gesture recognition
   const PRESS_THRESHOLD = 300; // ms to differentiate between short and long press
   const MOVEMENT_THRESHOLD = 10; // minimal pixels to recognize as movement
+  const ACTION_COOLDOWN = 100; // ms cooldown between actions to prevent double triggers
+  
+  // Ref for the touch surface
+  const touchSurfaceRef = useRef(null);
+
+  // Prevent default touch behavior
+  useEffect(() => {
+    const touchSurface = touchSurfaceRef.current;
+    if (!touchSurface) return;
+
+    const preventDefaultTouch = (e) => {
+      e.preventDefault();
+    };
+
+    touchSurface.addEventListener('touchstart', preventDefaultTouch, { passive: false });
+    touchSurface.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+    touchSurface.addEventListener('touchend', preventDefaultTouch, { passive: false });
+
+    return () => {
+      touchSurface.removeEventListener('touchstart', preventDefaultTouch);
+      touchSurface.removeEventListener('touchmove', preventDefaultTouch);
+      touchSurface.removeEventListener('touchend', preventDefaultTouch);
+    };
+  }, []);
 
   const handleGestureStart = (event) => {
     const point = event.touches ? event.touches[0] : event;
@@ -18,10 +45,17 @@ const TouchControls = ({ onControl }) => {
   const handleGestureEnd = (event) => {
     if (!gestureStart) return;
 
+    const now = new Date().getTime();
     const point = event.changedTouches ? event.changedTouches[0] : event;
     const deltaX = point.clientX - gestureStart.x;
     const deltaY = point.clientY - gestureStart.y;
-    const duration = new Date().getTime() - gestureStart.time;
+    const duration = now - gestureStart.time;
+
+    // Check if we're still in cooldown period
+    if (now - lastActionTime < ACTION_COOLDOWN) {
+      setGestureStart(null);
+      return;
+    }
 
     // Check if there was significant movement
     if (Math.abs(deltaX) > MOVEMENT_THRESHOLD || Math.abs(deltaY) > MOVEMENT_THRESHOLD) {
@@ -37,19 +71,30 @@ const TouchControls = ({ onControl }) => {
       }
     } else {
       // No movement - handle as a press
+      // Short press = ArrowUp, Long press = Space (instant drop)
       onControl(duration >= PRESS_THRESHOLD ? ' ' : 'ArrowUp');
     }
 
+    // Update last action time
+    setLastActionTime(now);
+    setGestureStart(null);
+  };
+
+  // Handle gesture cancel
+  const handleGestureCancel = () => {
     setGestureStart(null);
   };
 
   return (
     <div 
-      className="absolute inset-0 bg-transparent"
+      ref={touchSurfaceRef}
+      className="absolute inset-0 bg-transparent touch-none"
       onTouchStart={handleGestureStart}
       onTouchEnd={handleGestureEnd}
+      onTouchCancel={handleGestureCancel}
       onMouseDown={handleGestureStart}
       onMouseUp={handleGestureEnd}
+      onMouseLeave={handleGestureCancel}
     />
   );
 };

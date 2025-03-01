@@ -17,6 +17,7 @@ const CONTAINER_HEIGHT = 680;
 
 const MultiTetris = () => {
   const [gameType, setGameType] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);  
   const [board, setBoard] = useState(createEmptyBoard());
   const [currentPiece, setCurrentPiece] = useState(null);
   const [nextPiece, setNextPiece] = useState(null);
@@ -46,6 +47,12 @@ const MultiTetris = () => {
   });
   const [containerScale, setContainerScale] = useState(1);  
 
+  const detectMobileDevice = () => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const isMobileWidth = window.innerWidth <= 768;
+    return isMobileDevice || isMobileWidth;
+  };  
 
   // Create empty board
   function createEmptyBoard() {
@@ -337,6 +344,16 @@ const MultiTetris = () => {
     const guidelines = calculateGuidelines(firstPiece, startPosition);
     setGuideLines(guidelines);
   }, [generateRandomPiece, checkGameOver, calculateGuidelines]);
+
+  useEffect(() => {
+    // Detect mobile device once on component mount
+    setIsMobile(detectMobileDevice());
+    
+    // Always show Settings window on game start
+    setIsMenuVisible(false); // Ensure menu is not visible
+    setIsSettingsVisible(true); // Always show settings
+    setIsPaused(true);
+  }, []);
 
   {/* TouchControls - start */}
   useEffect(() => {
@@ -915,17 +932,32 @@ const MultiTetris = () => {
               </div>
             </div>
 
-            {/* Controls info */}
+            {/* Controls info with device-specific instructions */}
             <div className="border-2 border-gray-400 p-2">
               <p className="text-xl mb-2 text-center font-bold cursor-not-allowed">Controls</p>
-              <ul>
-                <li>← : Left</li>
-                <li>→ : Right</li>
-                <li>↑ : Rotate</li>
-                <li>↓ : Accelerate drop</li>
-                <li>Space : Instant drop</li>
-                <li>ESC : Stop and play again</li>
-              </ul>
+              {isMobile ? (
+                // Mobile-specific controls
+                <ul>
+                  <li>Movement <span className="font-medium">←</span> <span className="font-medium">→</span></li>
+                  <li>Swipe <span className="font-medium">←</span> <span className="font-medium">→</span></li>
+                  <li>Accelerate drop</li>
+                  <li>Swipe <span className="font-medium">↓</span></li>
+                  <li>Rotate</li>
+                  <li>Short Touch</li>
+                  <li>Instant drop</li>
+                  <li>Long press</li>
+                </ul>
+              ) : (
+                // Desktop controls
+                <ul>
+                  <li>← : Left</li>
+                  <li>→ : Right</li>
+                  <li>↑ : Rotate</li>
+                  <li>↓ : Accelerate drop</li>
+                  <li>Space : Instant drop</li>
+                  <li>ESC : Stop and play again</li>
+                </ul>
+                )}
             </div>
 
             {/* Buttons */}
