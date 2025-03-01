@@ -346,6 +346,11 @@ const MultiTetris = () => {
   }, [generateRandomPiece, checkGameOver, calculateGuidelines]);
 
   useEffect(() => {
+    // Change the document title to "MultiTetris"
+    document.title = "MultiTetris";
+  }, []);
+
+  useEffect(() => {
     // Detect mobile device once on component mount
     setIsMobile(detectMobileDevice());
     
@@ -938,14 +943,14 @@ const MultiTetris = () => {
               {isMobile ? (
                 // Mobile-specific controls
                 <ul>
-                  <li>Movement <span className="font-medium">←</span> <span className="font-medium">→</span></li>
-                  <li>Swipe <span className="font-medium">←</span> <span className="font-medium">→</span></li>
-                  <li>Accelerate drop</li>
-                  <li>Swipe <span className="font-medium">↓</span></li>
-                  <li>Rotate</li>
-                  <li>Short Touch</li>
-                  <li>Instant drop</li>
-                  <li>Long press</li>
+                  <p className="font-bold">Movement <span className="font-medium">←</span> <span className="font-medium">→</span></p>
+                  <p>Swipe <span className="font-medium">←</span> <span className="font-medium">→</span></p>
+                  <p className="font-bold mt-2">Accelerate drop</p>
+                  <p>Swipe <span className="font-medium">↓</span></p>
+                  <p className="font-bold mt-2">Rotate</p>
+                  <p>Short Touch</p>
+                  <p className="font-bold mt-2">Instant drop</p>
+                  <p>Long press</p>
                 </ul>
               ) : (
                 // Desktop controls
